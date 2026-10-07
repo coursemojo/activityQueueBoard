@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authoring Pipeline Guide</title>
+    <style>
+        :root {
+            --bg: #f5f6fa;
+            --surface: #ffffff;
+            --surface-hover: #f0f1f5;
+            --border: #e2e4ec;
+            --border-active: #4a6cf7;
+            --text: #1a1d2e;
+            --text-muted: #5f6478;
+            --accent: #3b5bdb;
+            --accent-glow: rgba(59, 91, 219, 0.08);
+            --green: #0ca678;
+            --green-bg: rgba(12, 166, 120, 0.08);
+            --amber: #e67700;
+            --amber-bg: rgba(230, 119, 0, 0.07);
+            --rose: #e03131;
+            --rose-bg: rgba(224, 49, 49, 0.07);
+            --purple: #7048e8;
+            --purple-bg: rgba(112, 72, 232, 0.07);
+            --cyan: #1098ad;
+            --cyan-bg: rgba(16, 152, 173, 0.07);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .header h1 span { color: var(--accent); }
+
+        .header-subtitle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Audience filter pills */
+        .filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .filter-pill:hover { border-color: var(--text-muted); }
+        .filter-pill.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+        .filter-pill[data-filter="author"].active { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+        .filter-pill[data-filter="lead"].active { border-color: var(--purple); color: var(--purple); background: var(--purple-bg); }
+        .filter-pill[data-filter="transformation"].active { border-color: var(--amber); color: var(--amber); background: var(--amber-bg); }
+        .filter-pill[data-filter="product"].active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-bg); }
+
+        /* Main layout */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Hero value prop */
+        .hero-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .hero-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .hero-card .hero-icon {
+            font-size: 1.6rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-card h3 {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
+        .hero-card p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Pipeline visual */
+        .pipeline-visual {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .pipeline-visual h2 {
+            font-size: 1rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.35rem;
+        }
+
+        .pipeline-visual .pipeline-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            opacity: 0.7;
+        }
+
+        .pipeline-flow {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            min-width: max-content;
+            padding: 0.5rem 0;
+        }
+
+        .pipeline-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .pipeline-node:hover { transform: translateY(-2px); }
+
+        .node-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            border: 2px solid var(--border);
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .pipeline-node:hover .node-icon,
+        .pipeline-node.active .node-icon {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .pipeline-node.active .node-icon {
+            background: var(--accent-glow);
+        }
+
+        .node-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 90px;
+            transition: color 0.2s;
+        }
+
+        .pipeline-node:hover .node-label,
+        .pipeline-node.active .node-label { color: var(--text); }
+
+        .node-actor {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .node-type {
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 0.1rem 0.4rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .node-type-auto { background: var(--accent-glow); color: var(--accent); }
+        .node-type-human { background: var(--green-bg); color: var(--green); }
+        .node-type-handoff { background: var(--purple-bg); color: var(--purple); }
+
+        .pipeline-arrow {
+            display: flex;
+            align-items: center;
+            padding: 0 0.4rem;
+            color: var(--border);
+            font-size: 1.2rem;
+            margin-bottom: 2.4rem;
+        }
+
+        .arrow-line {
+            width: 30px;
+            height: 2px;
+            background: var(--border);
+            position: relative;
+        }
+
+        .arrow-line::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: -4px;
+            border: 5px solid transparent;
+            border-left-color: var(--border);
+        }
+
+        /* Section cards */
+        .sections-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .section-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .section-card.highlight {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .section-card.filtered-out {
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .section-header {
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .section-header:hover { background: var(--surface-hover); }
+
+        .section-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .section-title-block { flex: 1; }
+
+        .section-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.15rem;
+        }
+
+        .section-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .section-tags {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.2rem 0.55rem;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .tag-author { background: var(--green-bg); color: var(--green); }
+        .tag-lead { background: var(--purple-bg); color: var(--purple); }
+        .tag-transformation { background: var(--amber-bg); color: var(--amber); }
+        .tag-product { background: var(--cyan-bg); color: var(--cyan); }
+
+        /* Automation badges */
+        .automation-badge {
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 0.2rem 0.55rem;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .automation-badge::before {
+            font-size: 0.7rem;
+            line-height: 1;
+        }
+
+        .auto-automated { background: var(--accent-glow); color: var(--accent); }
+        .auto-automated::before { content: '\u2699'; }
+        .auto-manual { background: var(--green-bg); color: var(--green); }
+        .auto-manual::before { content: '\u270B'; }
+        .auto-hybrid { background: var(--purple-bg); color: var(--purple); }
+        .auto-hybrid::before { content: '\u21C4'; }
+
+        .section-chevron {
+            color: var(--text-muted);
+            transition: transform 0.3s;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .section-card.open .section-chevron { transform: rotate(90deg); }
+
+        .section-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .section-card.open .section-body {
+            max-height: 5000px;
+        }
+
+        .section-content {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .section-content h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--accent);
+            margin: 1.25rem 0 0.75rem 0;
+        }
+
+        .section-content h3:first-child { margin-top: 1.25rem; }
+
+        .section-content p, .section-content li {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .section-content ul, .section-content ol {
+            padding-left: 1.2rem;
+            margin: 0.5rem 0;
+        }
+
+        .section-content li { margin-bottom: 0.4rem; }
+
+        .section-content strong { color: var(--text); font-weight: 600; }
+
+        .section-content code {
+            background: #eef0f6;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            color: var(--accent);
+        }
+
+        .callout {
+            background: var(--accent-glow);
+            border-left: 3px solid var(--accent);
+            padding: 0.85rem 1rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+        }
+
+        .callout.warning {
+            background: var(--amber-bg);
+            border-left-color: var(--amber);
+        }
+
+        .callout.success {
+            background: var(--green-bg);
+            border-left-color: var(--green);
+        }
+
+        .callout p { color: var(--text); }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.75rem 0;
+            font-size: 0.85rem;
+        }
+
+        .detail-table th {
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            background: #eef0f6;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .detail-table td {
+            padding: 0.6rem 0.75rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .detail-table td strong { color: var(--text); }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+        }
+
+        .status-human { background: var(--green-bg); color: var(--green); }
+        .status-claude { background: var(--accent-glow); color: var(--accent); }
+        .status-auto { background: var(--purple-bg); color: var(--purple); }
+
+        /* Two-column layout */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .two-col > div h4 {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+
+        /* Folder tree */
+        .folder-tree {
+            background: #eef0f6;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin: 0.75rem 0;
+            overflow-x: auto;
+        }
+
+        .folder-tree .highlight-file { color: var(--green); font-weight: 600; }
+        .folder-tree .muted-file { color: var(--text-muted); opacity: 0.6; }
+
+        /* Footer */
+        .footer {
+            max-width: 1400px;
+            margin: 3rem auto 2rem;
+            padding: 0 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        .footer a { color: var(--accent); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-inner { flex-direction: column; align-items: flex-start; }
+            .main { padding: 1rem; }
+            .pipeline-visual { padding: 1rem; }
+            .node-icon { width: 44px; height: 44px; font-size: 1.2rem; }
+            .node-label { font-size: 0.65rem; max-width: 70px; }
+            .arrow-line { width: 16px; }
+            .section-header { padding: 1rem; }
+            .section-content { padding: 0 1rem 1rem; }
+            .hero-cards { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <div>
+            <h1><span>Authoring Pipeline</span> Guide</h1>
+            <p class="header-subtitle">How activities go from module plan to classroom-ready product</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+        <a href="author-workflow.html" style="font-size:0.82rem;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:0.35rem 0.85rem;border-radius:20px;">Author Walkthrough &rarr;</a>
+        <a href="jira-pipeline.html" style="font-size:0.82rem;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:0.35rem 0.85rem;border-radius:20px;">Jira Pipeline &rarr;</a>
+        <a href="jira-refresher.html" style="font-size:0.82rem;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:0.35rem 0.85rem;border-radius:20px;">Jira Refresher &rarr;</a>
+        <a href="setup.html" style="font-size:0.82rem;font-weight:600;color:#fff;background:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:0.35rem 0.85rem;border-radius:20px;">Setup &middot; start here &rarr;</a>
+        <a href="onboarding-session-1.html" style="font-size:0.82rem;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:0.35rem 0.85rem;border-radius:20px;">Onboarding 1 &middot; Start Here &rarr;</a>
+        <a href="onboarding-session-2.html" style="font-size:0.82rem;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:0.35rem 0.85rem;border-radius:20px;">Onboarding 2 &middot; In the Pipeline &rarr;</a>
+        <a href="onboarding-session-3.html" style="font-size:0.82rem;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:0.35rem 0.85rem;border-radius:20px;">Onboarding 3 &middot; Claude Code &rarr;</a>
+        <a href="glossary.html" style="font-size:0.82rem;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:0.35rem 0.85rem;border-radius:20px;">Glossary &rarr;</a>
+        <a href="where-to-find.html" style="font-size:0.82rem;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:0.35rem 0.85rem;border-radius:20px;">Where do I find…? &rarr;</a>
+        <a href="draft-ready.html" style="font-size:0.82rem;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:0.35rem 0.85rem;border-radius:20px;">Is my draft ready? &rarr;</a>
+        <a href="faq.html" style="font-size:0.82rem;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:0.35rem 0.85rem;border-radius:20px;">FAQ &rarr;</a>
+        <div class="filters">
+            <button class="filter-pill active" data-filter="all">All Roles</button>
+            <button class="filter-pill" data-filter="author">Author</button>
+            <button class="filter-pill" data-filter="lead">Lead</button>
+            <button class="filter-pill" data-filter="transformation">Transformation</button>
+            <button class="filter-pill" data-filter="product">Product</button>
+        </div>
+        </div>
+    </div>
+</header>
+
+<main class="main">
+
+    <!-- Value Proposition Cards -->
+    <div class="hero-cards">
+        <div class="hero-card">
+            <div class="hero-icon">&#x1F50D;</div>
+            <h3>Source Material Discovery</h3>
+            <p>Automatically locates and copies the exact chapters, lesson plans, and supplemental materials needed &mdash; across all curricula</p>
+        </div>
+        <div class="hero-card">
+            <div class="hero-icon">&#x1F4DD;</div>
+            <h3>First Draft Generation</h3>
+            <p>Claude reads the plan, the text, and our exemplar catalog, then produces a complete activity draft</p>
+        </div>
+        <div class="hero-card">
+            <div class="hero-icon">&#x2705;</div>
+            <h3>Quality Validation</h3>
+            <p>11-point automated QA checks formatting, paragraph references, scaffolding structure, and verbatim fidelity</p>
+        </div>
+        <div class="hero-card">
+            <div class="hero-icon">&#x1F4E6;</div>
+            <h3>Transformation-Ready Export</h3>
+            <p>Produces a CSV or JSON formatted for the transformation pipeline, plus a Google Doc for Reader Content</p>
+        </div>
+        <div class="hero-card">
+            <div class="hero-icon">&#x1F4AC;</div>
+            <h3>Structured Feedback Capture</h3>
+            <p>Every edit an author makes is logged as a diff-based changelog &mdash; what changed, why, and what to improve</p>
+        </div>
+    </div>
+
+    <!-- Pipeline Visual -->
+    <div class="pipeline-visual">
+        <h2>Pipeline at a Glance</h2>
+        <p class="pipeline-subtitle">Click any stage to jump to its detail section. Purple = automated, Green = human, Violet = handoff.</p>
+        <div class="pipeline-flow">
+            <div class="pipeline-node" data-section="module-planning">
+                <div class="node-icon" style="background: var(--green-bg);">&#x1F4CB;</div>
+                <span class="node-label">Module Planning</span>
+                <span class="node-actor">Author</span>
+                <span class="node-type node-type-human">Human</span>
+            </div>
+            <div class="pipeline-arrow"><div class="arrow-line"></div></div>
+
+            <div class="pipeline-node" data-section="source-materials">
+                <div class="node-icon" style="background: var(--accent-glow);">&#x1F4C1;</div>
+                <span class="node-label">Gather Materials</span>
+                <span class="node-actor">/populate-lesson</span>
+                <span class="node-type node-type-auto">Auto</span>
+            </div>
+            <div class="pipeline-arrow"><div class="arrow-line"></div></div>
+
+            <div class="pipeline-node" data-section="ticket-creation">
+                <div class="node-icon" style="background: var(--purple-bg);">&#x1F3AB;</div>
+                <span class="node-label">Ticket Creation</span>
+                <span class="node-actor">Ops / Product</span>
+                <span class="node-type node-type-handoff">Handoff</span>
+            </div>
+            <div class="pipeline-arrow"><div class="arrow-line"></div></div>
+
+            <div class="pipeline-node" data-section="pipeline-execution">
+                <div class="node-icon" style="background: var(--accent-glow);">&#x1F916;</div>
+                <span class="node-label">Draft Generation</span>
+                <span class="node-actor">/draft-activity</span>
+                <span class="node-type node-type-auto">Auto</span>
+            </div>
+            <div class="pipeline-arrow"><div class="arrow-line"></div></div>
+
+            <div class="pipeline-node" data-section="quality-check">
+                <div class="node-icon" style="background: var(--accent-glow);">&#x1F50D;</div>
+                <span class="node-label">Quality Check</span>
+                <span class="node-actor">/edit-draft</span>
+                <span class="node-type node-type-auto">Auto</span>
+            </div>
+            <div class="pipeline-arrow"><div class="arrow-line"></div></div>
+
+            <div class="pipeline-node" data-section="author-review">
+                <div class="node-icon" style="background: var(--green-bg);">&#x270F;&#xFE0F;</div>
+                <span class="node-label">Author Review</span>
+                <span class="node-actor">Author / Lead</span>
+                <span class="node-type node-type-human">Human</span>
+            </div>
+            <div class="pipeline-arrow"><div class="arrow-line"></div></div>
+
+            <div class="pipeline-node" data-section="finalization">
+                <div class="node-icon" style="background: var(--purple-bg);">&#x2705;</div>
+                <span class="node-label">Finalize</span>
+                <span class="node-actor">/move-to-final</span>
+                <span class="node-type node-type-handoff">Handoff</span>
+            </div>
+            <div class="pipeline-arrow"><div class="arrow-line"></div></div>
+
+            <div class="pipeline-node" data-section="transformation">
+                <div class="node-icon" style="background: var(--amber-bg);">&#x1F504;</div>
+                <span class="node-label">Transformation</span>
+                <span class="node-actor">/format-csv</span>
+                <span class="node-type node-type-auto">Auto</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Cards -->
+    <div class="sections-grid">
+
+        <!-- 1. MODULE PLANNING -->
+        <div class="section-card" id="module-planning" data-audiences="author lead product">
+            <div class="section-header" onclick="toggleSection(this)">
+                <div class="section-icon" style="background: var(--green-bg);">&#x1F4CB;</div>
+                <div class="section-title-block">
+                    <div class="section-title">Module Planning</div>
+                    <div class="section-subtitle">Authors define what each activity should look like</div>
+                </div>
+                <div class="section-tags">
+                    <span class="automation-badge auto-manual">Manual</span>
+                    <span class="tag tag-author">Author</span>
+                    <span class="tag tag-lead">Lead</span>
+                </div>
+                <div class="section-chevron">&#9654;</div>
+            </div>
+            <div class="section-body">
+                <div class="section-content">
+                    <h3>What is a Module Plan?</h3>
+                    <p>The module plan is a spreadsheet where authors define the blueprint for every activity in a module. It tells Claude <strong>what to build</strong> &mdash; the objective, text excerpt, question types, target task, and driving questions for each lesson.</p>
+
+                    <div class="callout">
+                        <p><strong>The module plan is the single most important input to draft quality.</strong> A clear, well-structured plan produces a strong first draft. A vague plan produces a draft that needs heavy editing.</p>
+                    </div>
+
+                    <h3>What Goes in the Plan</h3>
+                    <table class="detail-table">
+                        <thead>
+                            <tr><th>Column</th><th>What to Include</th><th>How Claude Uses It</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Activity ID</strong></td>
+                                <td>The unique identifier (e.g., <code>OE_SLP_XX_G9_1.1_7_v1</code>)</td>
+                                <td>Names all output files and links to the Jira ticket. No ID = no draft.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Activity Objective</strong></td>
+                                <td>What students will learn or do</td>
+                                <td>Anchors the entire activity &mdash; every question ladders up to this</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Text Excerpt</strong></td>
+                                <td>Reference to the source text and which section to use. For partial-page excerpts, specify boundaries: e.g., <code>Chapter 2, pp. 15&ndash;18</code> or <code>Chapter 2, from p.15 "opening words" to p.18 "closing words"</code></td>
+                                <td>Claude retrieves the text from the Curriculum Hub and extracts the specified section</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Target Task (Verbatim)</strong></td>
+                                <td>The assessment question exactly as you want it used &mdash; whether from the curriculum or your own wording</td>
+                                <td>Used <strong>word-for-word</strong> as the final assessment; Claude does not modify this. <em>Use this OR Target Task Outline &mdash; not both.</em></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Driving Questions (Verbatim)</strong></td>
+                                <td>Scaffolding questions you want used exactly as written &mdash; from the curriculum or your own</td>
+                                <td>Used <strong>word-for-word</strong> in the question sequence</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Driving Questions (Outline)</strong></td>
+                                <td>Additional guidance &mdash; question topics, skills to target, sequencing hints</td>
+                                <td>Claude uses these as <strong>direction</strong> to generate additional scaffolding questions</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TT Format/Type</strong></td>
+                                <td>The format of the target task (e.g., Shortwrite HS, Longwrite HS)</td>
+                                <td>Determines the structure of the assessment section</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Planning Notes</strong></td>
+                                <td>Anything you want Claude to know when building this activity &mdash; context, guidance, constraints, connections</td>
+                                <td>Claude reads these notes as direct input. The more specific, the better the draft.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Planning Notes &mdash; Your Direct Line to Claude</h3>
+                    <p>Planning notes are a freeform field where you tell Claude anything relevant to this build. The more specific you are, the better the draft. Examples of what authors include:</p>
+                    <ul>
+                        <li><strong>Curriculum alignment:</strong> "Hit those TDQs closely" or "Use your judgement &mdash; adapt freely for better scaffolding"</li>
+                        <li><strong>Excerpt guidance:</strong> "The excerpt should emphasize the dialogue in chapter 5" or "Skip the first two pages &mdash; start where the conflict begins"</li>
+                        <li><strong>Connections:</strong> "This lesson needs to connect back to the module 2 assessment" or "Students will have already read chapters 1&ndash;4 in class"</li>
+                        <li><strong>Scope adjustments:</strong> "Skip the vocabulary focus" or "We need more scaffolding than usual &mdash; this is a challenging text for this grade level"</li>
+                        <li><strong>Specific content to include:</strong> Paste questions, tasks, or prompts you want Claude to use directly &mdash; anything pasted here will be treated as author intent</li>
+                    </ul>
+                    <div class="callout">
+                        <p><strong>What to paste vs. what not to paste:</strong> DO paste specific questions, tasks, and prompts you want used in the activity. DON'T paste entire teacher edition pages or background context &mdash; Claude can find that in the source materials itself.</p>
+                    </div>
+
+                    <h3>Verbatim vs. Outline &mdash; When to Use Each</h3>
+                    <p><strong>Verbatim</strong> columns contain exact wording &mdash; from the curriculum or your own &mdash; that Claude must use word-for-word. <strong>Outline</strong> columns are your creative direction &mdash; guidance that Claude interprets to generate questions, transitions, and instructional framing.</p>
+                    <p>For each row, use <strong>one or the other</strong> for a given element: if you have exact wording for the target task, put it in Target Task (Verbatim). If you want Claude to generate the target task from your guidance, put direction in the Outline column instead. You can mix across elements &mdash; e.g., verbatim target task + outline driving questions.</p>
+
+                    <h3>Novel Curricula &mdash; Excerpt Numbering</h3>
+                    <p>For novel curricula, the <code>/pick-excerpt</code> skill extracts your specified pages and applies <strong>paragraph numbering based on specified rules</strong> (these rules are still being finalized). This numbered excerpt is what students see and what questions reference. You don't need to number paragraphs yourself; just specify the page range in the Text Excerpt column.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. SOURCE MATERIALS -->
+        <div class="section-card" id="source-materials" data-audiences="author lead product">
+            <div class="section-header" onclick="toggleSection(this)">
+                <div class="section-icon" style="background: var(--accent-glow);">&#x1F4C1;</div>
+                <div class="section-title-block">
+                    <div class="section-title">Source Materials &amp; Gathering</div>
+                    <div class="section-subtitle">The inputs that make the assembly line work</div>
+                </div>
+                <div class="section-tags">
+                    <span class="automation-badge auto-hybrid">Hybrid</span>
+                    <span class="tag tag-author">Author</span>
+                    <span class="tag tag-product">Product</span>
+                </div>
+                <div class="section-chevron">&#9654;</div>
+            </div>
+            <div class="section-body">
+                <div class="section-content">
+                    <h3>The Assembly Line Metaphor</h3>
+                    <p>Think of the pipeline as a factory. The module plan is the blueprint, and the source materials are the raw parts &mdash; steel, windows, steering wheels. If the parts aren't on the line, the factory can't build the car. Claude will either fail gracefully or produce an incomplete draft &mdash; <strong>it will not make things up.</strong></p>
+
+                    <h3>Automated Material Gathering</h3>
+                    <p>The <code>/populate-lesson</code> skill handles material discovery automatically:</p>
+                    <ul>
+                        <li>Reads the module planning sheet to identify which text, which chapters, which lessons</li>
+                        <li>Locates source texts in the Curriculum Hub (searches across 135+ titles)</li>
+                        <li>Copies <strong>only the chapters referenced in the plan</strong> &mdash; not the whole book</li>
+                        <li>Pulls teacher lesson plans, unit plans, and supplemental materials</li>
+                        <li>Exports Google Sheets planning docs as CSV</li>
+                    </ul>
+                    <p>Each curriculum organizes materials differently (Amplify uses letter-coded units, WW uses module numbers, EL has its own structure). The system knows how to navigate all of them.</p>
+
+                    <h3>The Curriculum Hub</h3>
+                    <p>All source texts live in the <strong>Curriculum Hub</strong> on Google Drive, organized by curriculum, grade, and module. This is where Claude looks when it needs to retrieve a text excerpt.</p>
+                    <ul>
+                        <li><strong>Anthology curricula</strong> (Amplify, HMH, MYP, StudySync): Steven's procurement process places texts into the correct folders. If procurement is complete for a module, the texts should be ready.</li>
+                        <li><strong>Novel/supplemental curricula</strong> (Odell, EL, Guidebooks): Authors may need to source materials themselves (e.g., a TED talk transcript, a public domain speech). These <strong>must be placed in the Hub</strong> before a build can run.</li>
+                    </ul>
+
+                    <div class="callout warning">
+                        <p><strong>Before submitting a module plan for build:</strong> Verify that every text referenced in your plan actually exists in the Curriculum Hub. If it doesn't, either place it there yourself or flag it to Steven. A missing source text = an incomplete draft.</p>
+                    </div>
+
+                    <h3>What Needs to Be in Place</h3>
+                    <ul>
+                        <li>The full text (or relevant excerpt) in the correct Hub folder</li>
+                        <li>Any supplemental materials referenced in the plan (student handouts, tool pages, etc.)</li>
+                        <li>File names that follow the naming convention: <code>{Title}_{Excerpt or Full Text}.txt</code> (e.g., <code>Farewell to Manzanar_Full Text.txt</code> or <code>Dark They Were and Golden-Eyed_Excerpt.txt</code>)</li>
+                    </ul>
+
+                    <h3>Common Questions</h3>
+                    <ul>
+                        <li><strong>Materials used across multiple lessons:</strong> No need to copy files into each lesson folder. Source materials stay in their canonical Hub location and Claude references them from there. If a novel is already sourced from another curriculum, Claude will copy it over to the relevant text folders for the lesson it's working on.</li>
+                        <li><strong>Rubrics and writing task resources:</strong> Same &mdash; keep them in the Hub once. Claude finds them when referenced in the plan.</li>
+                        <li><strong>Multiple file formats (PDF, TXT, etc.):</strong> Claude reads whatever is available, preferring text files when both exist. You don't need to worry about duplicates.</li>
+                        <li><strong>Using only part of a text:</strong> Don't edit source files directly. Instead, specify the exact pages or section in your module plan's Text Excerpt column (e.g., <code>Chapter 2, pp. 15&ndash;18</code>). The <code>/pick-excerpt</code> skill handles extraction.</li>
+                        <li><strong>Anthology texts:</strong> The full text stays in the Hub even if you're only using part of it. Specify which section in your plan.</li>
+                    </ul>
+
+                    <h3>When Sources Are Missing</h3>
+                    <p>If Claude can't find a referenced text, the build will flag it rather than hallucinate content. The draft will come back incomplete, and the Jira ticket will reflect that source materials need attention before the draft can be completed.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. TICKET CREATION -->
+        <div class="section-card" id="ticket-creation" data-audiences="product">
+            <div class="section-header" onclick="toggleSection(this)">
+                <div class="section-icon" style="background: var(--purple-bg);">&#x1F3AB;</div>
+                <div class="section-title-block">
+                    <div class="section-title">Ticket Creation &amp; Jira Workflow</div>
+                    <div class="section-subtitle">How work gets tracked from backlog to done</div>
+                </div>
+                <div class="section-tags">
+                    <span class="automation-badge auto-manual">Manual</span>
+                    <span class="tag tag-product">Product</span>
+                </div>
+                <div class="section-chevron">&#9654;</div>
+            </div>
+            <div class="section-body">
+                <div class="section-content">
+                    <h3>Jira Structure</h3>
+                    <p>Work is tracked in the <strong>APT (Authoring Pipeline Testing)</strong> Jira project. The hierarchy:</p>
+                    <ul>
+                        <li><strong>Epic</strong> = one module (e.g., Odell G9 Module 1)</li>
+                        <li><strong>Story/Task</strong> = one lesson/activity (ticket name = Activity ID)</li>
+                    </ul>
+
+                    <h3>The Activity ID</h3>
+                    <p>Every activity has a unique ID (e.g., <code>OE_SLP_XX_G9_1.1_7_v1</code>) that follows it through the entire pipeline. This ID:</p>
+                    <ul>
+                        <li>Names the Jira ticket</li>
+                        <li>Names the output folder and all generated files</li>
+                        <li>Links the module plan row to the draft output</li>
+                        <li>Will connect to the Procurement Dashboard to show which activities are available for ticket creation</li>
+                    </ul>
+
+                    <div class="callout">
+                        <p><strong>No Activity ID = no draft.</strong> The ID is how every system in the pipeline identifies and tracks an activity. It must be present in the module plan before a build can be triggered.</p>
+                    </div>
+
+                    <h3>Ticket Lifecycle</h3>
+                    <table class="detail-table">
+                        <thead>
+                            <tr><th>Status</th><th>What It Means</th><th>Who Moves It</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Backlog</strong></td>
+                                <td>Ticket exists but isn't ready for drafting</td>
+                                <td>Created by Product / Ops</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Draft Activity with Claude</strong></td>
+                                <td>Claude is generating or has generated a draft</td>
+                                <td>Pipeline picks it up (automated)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Authoring</strong></td>
+                                <td>Human author is actively working on the activity</td>
+                                <td>Author moves ticket when working manually</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Draft Review</strong></td>
+                                <td>Author is reviewing and editing the Claude output</td>
+                                <td>Automated on draft completion</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Needs Lead Review</strong></td>
+                                <td>Lead is reviewing the edited draft</td>
+                                <td>Author submits via <code>/move-to-review</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Final Review</strong></td>
+                                <td>Lead has approved; final QA pass</td>
+                                <td>Lead approves</td>
+                            </tr>
+                            <tr>
+                                <td><strong>In Transformation</strong></td>
+                                <td>Draft is finalized and tagged for transformation</td>
+                                <td>Product via <code>/move-to-final</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Done</strong></td>
+                                <td>CSV/JSON delivered and verified</td>
+                                <td>Transformation team</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>How Tickets Get Created</h3>
+                    <p>Tickets are created when procurement is complete for a module. Ops (Steven) confirms that source materials are ready, and tickets are created in bulk for the module. Each ticket's name is the Activity ID.</p>
+
+                    <h3>Your Jira Workflow (Authors &amp; Leads)</h3>
+                    <p>Here's what you do with tickets day-to-day:</p>
+                    <ol>
+                        <li><strong>Pull a full module/unit</strong> from Backlog into To-Do at once (not one ticket at a time)</li>
+                        <li><strong>Assign tickets to yourself</strong> &mdash; this makes them easy to find on the board</li>
+                        <li><strong>Drag to Draft Activity with Claude</strong> when you're ready for Claude to build &mdash; this triggers the pipeline</li>
+                        <li><strong>Review</strong> when the ticket lands in Draft Review (Claude auto-advances it)</li>
+                        <li><strong>Submit for lead review</strong> via <code>/move-to-review</code> when your edits are done</li>
+                        <li><strong>Lead reviews</strong> and either sends back for revisions (via <code>/revisions</code> &mdash; reassigns ticket to author with feedback) or finalizes (via <code>/move-to-final</code>)</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. PIPELINE EXECUTION -->
+        <div class="section-card" id="pipeline-execution" data-audiences="author lead product">
+            <div class="section-header" onclick="toggleSection(this)">
+                <div class="section-icon" style="background: var(--accent-glow);">&#x1F916;</div>
+                <div class="section-title-block">
+                    <div class="section-title">Draft Generation &mdash; What Claude Does</div>
+                    <div class="section-subtitle">The automated steps that turn a plan into a draft</div>
+                </div>
+                <div class="section-tags">
+                    <span class="automation-badge auto-automated">Automated</span>
+                    <span class="tag tag-author">Author</span>
+                    <span class="tag tag-lead">Lead</span>
+                    <span class="tag tag-product">Product</span>
+                </div>
+                <div class="section-chevron">&#9654;</div>
+            </div>
+            <div class="section-body">
+                <div class="section-content">
+                    <h3>How It Works</h3>
+                    <p>When a Jira ticket moves to <strong>Draft Activity with Claude</strong>, the <code>/draft-activity</code> orchestrator runs a sequence of six specialized skills. Each skill handles one stage of the build, running in order:</p>
+
+                    <table class="detail-table">
+                        <thead>
+                            <tr><th>Step</th><th>Skill</th><th>What It Does</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="status-badge status-auto">1</span></td>
+                                <td><strong>/populate-lesson</strong></td>
+                                <td>Reads the module plan, navigates the Curriculum Hub folder structure, copies source materials to the working folder. Handles 7+ curricula with different naming conventions.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="status-badge status-auto">2</span></td>
+                                <td><strong>/extract-requirements</strong></td>
+                                <td>Extracts the lesson requirements, pedagogical intent, and source text assessment from the populated lesson.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="status-badge status-auto">3</span></td>
+                                <td><strong>/find-exemplars</strong></td>
+                                <td>Searches the Activity Catalog for matching exemplars, reads pattern documents, and synthesizes patterns across them.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="status-badge status-auto">4</span></td>
+                                <td><strong>/pick-excerpt</strong></td>
+                                <td>Selects and extracts the exact text excerpt. Handles paragraph numbering rules: preserved numbers for anthology curricula (AMP, HMH, MYP, STS), sequential numbering for novel curricula (WNW, EL, FTK).</td>
+                            </tr>
+                            <tr>
+                                <td><span class="status-badge status-auto">5</span></td>
+                                <td><strong>/generate-activity</strong></td>
+                                <td>Generates the full activity: introduction, driving questions with criteria and correct-threshold judgments, transition text, assessment section (claim + write), and extension question.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="status-badge status-auto">6</span></td>
+                                <td><strong>/edit-draft</strong></td>
+                                <td>Runs the automated quality validation pass and silently fixes issues before the draft reaches you.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>What Claude Reads</h3>
+                    <ul>
+                        <li>The module plan row for this specific activity</li>
+                        <li>The source text from the Curriculum Hub</li>
+                        <li>Teacher lesson plan PDF (if available)</li>
+                        <li>Curriculum-specific guidance documents (question type glossary, formatting rules)</li>
+                        <li>2&ndash;3 quality-matched exemplar activities from the 944+ exemplar catalog</li>
+                    </ul>
+
+                    <div class="callout">
+                        <p><strong>Claude reads the same inputs your authors would read</strong> &mdash; the lesson plan, the text, the teacher materials. It synthesizes patterns from the exemplar catalog to build questions that match proven formats. The planning notes authors write directly shape the output.</p>
+                    </div>
+
+                    <h3>What Claude Produces</h3>
+                    <p>A complete <code>Activity_Content.md</code> file containing:</p>
+                    <ul>
+                        <li>Activity-level metadata (ID, objective, alignment, text summary)</li>
+                        <li>Reader content (the formatted text excerpt with correct numbering)</li>
+                        <li>Introduction blocks (Mojo chat bubbles)</li>
+                        <li>Driving questions &mdash; each with question type, criteria for teachers, correct threshold, and 3 example correct responses (JBCs)</li>
+                        <li>Transition text between sections</li>
+                        <li>Assessment section (claim question + written response)</li>
+                        <li>Extension question</li>
+                        <li>Conclusion blocks</li>
+                    </ul>
+                    <p>Plus a <code>Match_Report.md</code> documenting which exemplars were used, why certain questions were chosen, and how the activity maps to the standard.</p>
+
+                    <div class="callout success">
+                        <p><strong>What Claude will never do:</strong> Modify verbatim content from the module plan (target tasks, verbatim driving questions), fabricate text excerpts from sources it can't find, or override the plan's specifications for question counts and content. The module plan is the source of truth.</p>
+                    </div>
+
+                    <h3>What Determines Draft Quality</h3>
+                    <div class="two-col">
+                        <div>
+                            <h4>Strong inputs produce strong drafts</h4>
+                            <ul>
+                                <li><strong>Clear objective</strong> &rarr; questions that build toward a coherent learning arc</li>
+                                <li><strong>Specific excerpt reference</strong> &rarr; well-scoped text that supports the questions</li>
+                                <li><strong>Detailed outline column</strong> &rarr; scaffolding that matches the author's pedagogical intent</li>
+                                <li><strong>Precise planning notes</strong> &rarr; the right level of creative latitude</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>Weak inputs produce weak drafts</h4>
+                            <ul>
+                                <li><strong>Vague objective</strong> &rarr; unfocused question sequence</li>
+                                <li><strong>Missing excerpt info</strong> &rarr; wrong or overly broad text selection</li>
+                                <li><strong>Empty outline column</strong> &rarr; generic scaffolding that may not match intent</li>
+                                <li><strong>Missing source text</strong> &rarr; incomplete or failed draft</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. QUALITY CHECK -->
+        <div class="section-card" id="quality-check" data-audiences="author lead product">
+            <div class="section-header" onclick="toggleSection(this)">
+                <div class="section-icon" style="background: var(--accent-glow);">&#x1F50D;</div>
+                <div class="section-title-block">
+                    <div class="section-title">Automated Quality Check</div>
+                    <div class="section-subtitle">11-point validation catches what the first pass might miss</div>
+                </div>
+                <div class="section-tags">
+                    <span class="automation-badge auto-automated">Automated</span>
+                    <span class="tag tag-author">Author</span>
+                    <span class="tag tag-lead">Lead</span>
+                    <span class="tag tag-product">Product</span>
+                </div>
+                <div class="section-chevron">&#9654;</div>
+            </div>
+            <div class="section-body">
+                <div class="section-content">
+                    <h3>A Second Pair of Eyes</h3>
+                    <p>After the draft is generated, the <code>/edit-draft</code> skill runs an 11-point validation pass in a <strong>completely separate context</strong> from the generation step. This is like having a second reviewer who hasn't seen the work before &mdash; they catch things the first pass might have missed.</p>
+
+                    <h3>The 11-Point Checklist</h3>
+                    <ol>
+                        <li><strong>Verbatim fidelity</strong> &mdash; questions match module plan word-for-word where specified</li>
+                        <li><strong>Paragraph references</strong> &mdash; every cited paragraph actually exists in the text</li>
+                        <li><strong>Question progression</strong> &mdash; proper scaffolding sequence (accessible &rarr; analytical &rarr; assessment)</li>
+                        <li><strong>Assessment alignment</strong> &mdash; Claim + Write match curriculum scope</li>
+                        <li><strong>Excerpt completeness</strong> &mdash; no placeholders, full text present</li>
+                        <li><strong>Line number accuracy</strong> &mdash; for poetry and drama</li>
+                        <li><strong>Criteria quality</strong> &mdash; text-specific, not generic</li>
+                        <li><strong>Brevity limits</strong> &mdash; question stems, criteria, and content blocks stay concise and within word count guidelines</li>
+                        <li><strong>Format compliance</strong> &mdash; no excluded fields, required sections present</li>
+                        <li><strong>MC formatting</strong> &mdash; proper option formatting for multiple choice</li>
+                        <li><strong>Content blocks</strong> &mdash; Introduction, Transition, Conclusion all present</li>
+                    </ol>
+
+                    <div class="callout success">
+                        <p><strong>Issues are fixed silently.</strong> The author receives a polished draft with these checks already resolved. You can also re-run <code>/edit-draft</code> manually at any time during your review if you want a fresh validation pass.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. AUTHOR REVIEW -->
+        <div class="section-card" id="author-review" data-audiences="author lead">
+            <div class="section-header" onclick="toggleSection(this)">
+                <div class="section-icon" style="background: var(--green-bg);">&#x270F;&#xFE0F;</div>
+                <div class="section-title-block">
+                    <div class="section-title">Author Review &amp; Editing</div>
+                    <div class="section-subtitle">Expert review, not expert assembly</div>
+                </div>
+                <div class="section-tags">
+                    <span class="automation-badge auto-manual">Manual</span>
+                    <span class="tag tag-author">Author</span>
+                    <span class="tag tag-lead">Lead</span>
+                </div>
+                <div class="section-chevron">&#9654;</div>
+            </div>
+            <div class="section-body">
+                <div class="section-content">
+                    <h3>The Author's Role</h3>
+                    <p>Claude produces a first draft &mdash; not a finished product. The author's job is to bring <strong>curriculum expertise, pedagogical judgment, and knowledge of students</strong> to refine that draft into something that works in a real classroom.</p>
+
+                    <div class="two-col">
+                        <div>
+                            <h4>Author focuses on...</h4>
+                            <ul>
+                                <li>Pedagogical judgment calls</li>
+                                <li>Question nuance &amp; text sensitivity</li>
+                                <li>Adjusting difficulty calibration</li>
+                                <li>Adding curriculum-specific context</li>
+                                <li>Final approval</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>System already handled...</h4>
+                            <ul>
+                                <li>File discovery &amp; organization</li>
+                                <li>v22 formatting compliance</li>
+                                <li>Paragraph reference accuracy</li>
+                                <li>Question scaffolding structure</li>
+                                <li>Match report documentation</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3>Finding Your Draft</h3>
+                    <p>Drafts live in the <code>draft_outputs/</code> folder, organized by date:</p>
+
+                    <div class="folder-tree">
+                        draft_outputs/<br>
+                        &nbsp;&nbsp;&boxvr;&mdash; <span class="muted-file">_examples/</span><br>
+                        &nbsp;&nbsp;&boxvr;&mdash; 2026-04-01_OE_SLP_XX_G9_1.1_7_v1/<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&boxvr;&mdash; <span class="highlight-file">OE_SLP_XX_G9_1.1_7_v1_Activity_Content.md</span> &larr; your file<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&boxvr;&mdash; OE_SLP_XX_G9_1.1_7_v1_Match_Report.md &larr; reference<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&boxur;&mdash; <span class="muted-file">_DO_NOT_EDIT/</span> &larr; backup, ignore<br>
+                    </div>
+
+                    <h3>Three Ways to Edit</h3>
+                    <table class="detail-table">
+                        <thead>
+                            <tr><th>Method</th><th>When to Use</th><th>How</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Edit directly</strong></td>
+                                <td>Any change you know how to make yourself &mdash; from fixing a typo to rewriting an entire question or swapping question order</td>
+                                <td>Edit the markdown file directly in VS Code and save</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ask Claude</strong></td>
+                                <td>When you want Claude's help thinking through or executing a change</td>
+                                <td>Describe what you want in plain English in the Claude panel. Examples:<br>
+                                <em>"Question 3 feels too easy &mdash; make it more analytically demanding"</em><br>
+                                <em>"Swap Questions 2 and 3 &mdash; students need vocabulary context first"</em><br>
+                                <em>"Tighten criteria for Q5 with specific paragraph references"</em></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Run <code>/edit-draft</code></strong></td>
+                                <td>Comprehensive quality pass</td>
+                                <td>Runs the full 11-point validation and auto-fixes issues</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>What to Look For</h3>
+                    <table class="detail-table">
+                        <thead>
+                            <tr><th>Area</th><th>Check</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Alignment</strong></td>
+                                <td>Does the activity match the objective and the curriculum's intent for this lesson?</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Question Sequence</strong></td>
+                                <td>Does the question arc build toward the right thinking? Do driving questions scaffold logically toward the target task?</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Question Types</strong></td>
+                                <td>Are the question types appropriate? (highlight, TDQ, LCQ, etc.)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Text References</strong></td>
+                                <td>Do paragraph references match the actual excerpt? Are questions grounded in the text, not generic?</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Criteria &amp; Thresholds</strong></td>
+                                <td>Are the correct-threshold criteria fair and the example responses realistic for this grade level?</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Verbatim Fidelity</strong></td>
+                                <td>Are target tasks and verbatim driving questions unchanged from the plan?</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Assessment Alignment</strong></td>
+                                <td>Does the assessment align with the end-of-module task?</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tone &amp; Language</strong></td>
+                                <td>Is the student-facing language grade-appropriate and engaging?</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout">
+                        <p><strong>Your expertise is the value add.</strong> Claude handles structure, formatting, and initial question generation. You bring the deep understanding of the text, the students, and what actually works in a classroom. That combination is what makes the pipeline powerful.</p>
+                    </div>
+
+                    <h3>Tips for Effective Editing</h3>
+                    <ul>
+                        <li>Start by reading the draft top to bottom without editing &mdash; get a feel for the arc</li>
+                        <li>Check the Match Report if a design choice surprises you &mdash; it explains the reasoning</li>
+                        <li>Be specific with Claude &mdash; "Make this better" is hard to act on; "The criteria should reference the metaphor in paragraph 8" gives Claude exactly what it needs</li>
+                        <li>The draft is a starting point. Make it yours &mdash; rewrite questions, change types, reorder, add, or remove as needed</li>
+                        <li><strong>You can't break anything.</strong> The <code>_DO_NOT_EDIT/</code> folder has a backup of the original</li>
+                    </ul>
+
+                    <h3>Review Path</h3>
+                    <p>After editing, submit your draft for lead review:</p>
+                    <ol>
+                        <li><strong>Author edits</strong> the draft (direct edits, Claude assistance, or <code>/edit-draft</code>)</li>
+                        <li><strong>Author submits</strong> via <code>/move-to-review</code> &mdash; generates a change summary and routes to your lead</li>
+                        <li><strong>Lead reviews</strong> in <code>review_ready/</code> and either:
+                            <ul>
+                                <li><strong>Sends back for revisions</strong> via <code>/revisions</code> &mdash; reassigns the Jira ticket to the author with specific feedback and an @mention notification (supports a priority flag for urgent items)</li>
+                                <li><strong>Finalizes</strong> via <code>/move-to-final</code> &mdash; captures feedback, generates changelog, moves to transformation</li>
+                            </ul>
+                        </li>
+                    </ol>
+
+                    <h3>Adding Content Blocks</h3>
+                    <p>If you need to add content blocks (Introduction, Transition, Conclusion, etc.) that aren't in the draft, you can either add them directly in the markdown following the existing format, or ask Claude: <em>"Add a transition block before Question 4 that bridges the vocabulary discussion to the analytical focus."</em></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. FINALIZATION -->
+        <div class="section-card" id="finalization" data-audiences="author lead product">
+            <div class="section-header" onclick="toggleSection(this)">
+                <div class="section-icon" style="background: var(--purple-bg);">&#x2705;</div>
+                <div class="section-title-block">
+                    <div class="section-title">Finalization</div>
+                    <div class="section-subtitle">Locking in the approved draft and capturing feedback</div>
+                </div>
+                <div class="section-tags">
+                    <span class="automation-badge auto-hybrid">Hybrid</span>
+                    <span class="tag tag-author">Author</span>
+                    <span class="tag tag-lead">Lead</span>
+                    <span class="tag tag-product">Product</span>
+                </div>
+                <div class="section-chevron">&#9654;</div>
+            </div>
+            <div class="section-body">
+                <div class="section-content">
+                    <h3>Running /move-to-final</h3>
+                    <p>After lead review is complete, the lead types <code>/move-to-final</code> in the Claude panel. This skill:</p>
+                    <ol>
+                        <li><strong>Asks you for feedback</strong> &mdash; What worked well? What needed the most editing? Any patterns you're seeing across drafts?</li>
+                        <li><strong>Generates a changelog</strong> &mdash; Compares your edited version against the original draft to document every change (two-layer diff if lead review was used)</li>
+                        <li><strong>Moves the final version</strong> to <code>final_outputs/</code> so the transformation team can pick it up</li>
+                        <li><strong>Updates the Jira ticket</strong> status to <strong>In Transformation</strong></li>
+                        <li><strong>Cleans up</strong> the draft folder (removes backup files, archives the Match Report)</li>
+                    </ol>
+
+                    <div class="callout">
+                        <p><strong>Your feedback is captured in the changelog and helps improve future drafts.</strong> Even a one-sentence note like <em>"Questions were solid but the intro felt generic"</em> is valuable. Patterns in feedback directly inform how Claude drafts for this curriculum going forward.</p>
+                    </div>
+
+                    <h3>Why This Step Matters</h3>
+                    <p>Simply dragging a Jira ticket loses the "why." The finalization step captures:</p>
+                    <ul>
+                        <li>A record of <strong>what changed</strong> and <strong>why</strong></li>
+                        <li>Patterns that help improve future drafts (e.g., "Claude consistently under-scaffolds for this curriculum")</li>
+                        <li>Accountability and transparency in the review process</li>
+                        <li>Qualitative data that informs skill improvements upstream</li>
+                    </ul>
+
+                    <h3>Quick Reference</h3>
+                    <table class="detail-table">
+                        <thead>
+                            <tr><th>I want to...</th><th>Do this</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Find my draft</strong></td><td><code>draft_outputs/</code> &gt; find your activity folder &gt; open <code>_Activity_Content.md</code></td></tr>
+                            <tr><td><strong>Understand a design choice</strong></td><td>Read the <code>_Match_Report.md</code> in the same folder</td></tr>
+                            <tr><td><strong>Fix a small issue</strong></td><td>Edit the file directly in VS Code</td></tr>
+                            <tr><td><strong>Make a bigger change</strong></td><td>Ask Claude in the panel (describe what you want in plain English)</td></tr>
+                            <tr><td><strong>Run a full quality check</strong></td><td>Type <code>/edit-draft</code> in the Claude panel</td></tr>
+                            <tr><td><strong>Submit for lead review</strong></td><td>Type <code>/move-to-review</code></td></tr>
+                            <tr><td><strong>Finalize (leads)</strong></td><td>Type <code>/move-to-final</code> after lead review is complete</td></tr>
+                            <tr><td><strong>Something looks wrong</strong></td><td>Ask Claude &mdash; or reach out to Maura</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. TRANSFORMATION -->
+        <div class="section-card" id="transformation" data-audiences="transformation product">
+            <div class="section-header" onclick="toggleSection(this)">
+                <div class="section-icon" style="background: var(--amber-bg);">&#x1F504;</div>
+                <div class="section-title-block">
+                    <div class="section-title">Transformation</div>
+                    <div class="section-subtitle">Converting finalized activities into deliverable format</div>
+                </div>
+                <div class="section-tags">
+                    <span class="automation-badge auto-automated">Automated</span>
+                    <span class="tag tag-transformation">Transformation</span>
+                    <span class="tag tag-product">Product</span>
+                </div>
+                <div class="section-chevron">&#9654;</div>
+            </div>
+            <div class="section-body">
+                <div class="section-content">
+                    <h3>From Draft to Deliverable</h3>
+                    <p>Once a ticket moves to <strong>In Transformation</strong>, the finalized activity content is converted into the format required for the platform. The <code>/format-csv</code> skill produces a transformation-ready CSV and a formatted Google Doc for Reader Content.</p>
+
+                    <h3>Current Process</h3>
+                    <ol>
+                        <li>A finalized <code>Activity_Content.md</code> is tagged for transformation via the Jira ticket</li>
+                        <li>The content is converted into a structured <strong>CSV or JSON</strong> ready for review</li>
+                        <li>The transformation team reviews the output for completeness and formatting</li>
+                        <li>Once approved, the ticket moves to <strong>Done</strong></li>
+                    </ol>
+
+                    <h3>What the Transformation Team Receives</h3>
+                    <ul>
+                        <li>A consistently structured file with all required fields populated</li>
+                        <li>Activity metadata, reader content, questions, criteria, and content blocks in a predictable format</li>
+                        <li>The Activity ID linking everything back to the Jira ticket and module plan</li>
+                    </ul>
+
+                    <div class="callout">
+                        <p><strong>Consistency is the goal.</strong> The upstream pipeline produces output in a standard format so that transformation doesn't have to handle one-off variations. When the format is predictable, QA is faster and errors are fewer.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. FOLDER STRUCTURE -->
+        <div class="section-card" id="folder-structure" data-audiences="author lead product transformation">
+            <div class="section-header" onclick="toggleSection(this)">
+                <div class="section-icon" style="background: var(--cyan-bg);">&#x1F4C2;</div>
+                <div class="section-title-block">
+                    <div class="section-title">Folder Structure &amp; File Organization</div>
+                    <div class="section-subtitle">Where everything lives on the shared drive</div>
+                </div>
+                <div class="section-tags">
+                    <span class="automation-badge auto-automated">Automated</span>
+                    <span class="tag tag-author">Author</span>
+                    <span class="tag tag-lead">Lead</span>
+                    <span class="tag tag-transformation">Transformation</span>
+                </div>
+                <div class="section-chevron">&#9654;</div>
+            </div>
+            <div class="section-body">
+                <div class="section-content">
+                    <h3>Folders You Work In</h3>
+                    <table class="detail-table">
+                        <thead>
+                            <tr><th>Folder</th><th>Purpose</th><th>Who Uses It</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong><code>module_plans/</code></strong></td>
+                                <td>Where you put your planning documents, organized by curriculum and grade</td>
+                                <td>Authors, Leads</td>
+                            </tr>
+                            <tr>
+                                <td><strong><code>draft_outputs/</code></strong></td>
+                                <td>Where drafts appear and where you edit them</td>
+                                <td>Authors, Leads</td>
+                            </tr>
+                            <tr>
+                                <td><strong><code>draft_outputs/review_ready/</code></strong></td>
+                                <td>Where drafts go after <code>/move-to-review</code> (leads review here)</td>
+                                <td>Leads</td>
+                            </tr>
+                            <tr>
+                                <td><strong><code>final_outputs/</code></strong></td>
+                                <td>Where finished activities go (created by <code>/move-to-final</code>, not manually)</td>
+                                <td>Transformation team</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Folders You Don't Need to Touch</h3>
+                    <table class="detail-table">
+                        <thead>
+                            <tr><th>Folder</th><th>What's In It</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong><code>source_material/</code></strong></td>
+                                <td>Pre-loaded texts, lesson plans, unit plans, assessments, and 944+ exemplar activities the agent searches for patterns</td>
+                            </tr>
+                            <tr>
+                                <td><strong><code>final_outputs/feedback_documentation/</code></strong></td>
+                                <td>Auto-generated changelogs with your edits and feedback (created by <code>/move-to-final</code>)</td>
+                            </tr>
+                            <tr>
+                                <td><strong><code>activity_ids/</code></strong></td>
+                                <td>Admin tool for generating activity ID sheets (not part of the authoring workflow)</td>
+                            </tr>
+                            <tr>
+                                <td><strong><code>_DO_NOT_EDIT/</code></strong></td>
+                                <td>Backup copies inside draft folders, used for change tracking</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- end sections-grid -->
+
+</main>
+
+<footer class="footer">
+    <p>Authoring Pipeline Guide &mdash; CourseMojo &middot; Last updated <span id="last-updated"></span></p>
+</footer>
+
+<script>
+    // Set last updated date
+    document.getElementById('last-updated').textContent = new Date().toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    // Toggle section open/closed
+    function toggleSection(header) {
+        const card = header.closest('.section-card');
+        card.classList.toggle('open');
+    }
+
+    // Pipeline node click -> scroll to and highlight section
+    document.querySelectorAll('.pipeline-node').forEach(node => {
+        node.addEventListener('click', () => {
+            const sectionId = node.dataset.section;
+            const section = document.getElementById(sectionId);
+            if (!section) return;
+
+            // Remove active from all nodes
+            document.querySelectorAll('.pipeline-node').forEach(n => n.classList.remove('active'));
+            node.classList.add('active');
+
+            // Open and highlight the section
+            section.classList.add('open');
+            section.classList.add('highlight');
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Remove highlight after animation
+            setTimeout(() => section.classList.remove('highlight'), 2000);
+        });
+    });
+
+    // Audience filter
+    document.querySelectorAll('.filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            const filter = pill.dataset.filter;
+
+            // Update active pill
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+
+            // Filter sections
+            document.querySelectorAll('.section-card').forEach(card => {
+                if (filter === 'all') {
+                    card.classList.remove('filtered-out');
+                } else {
+                    const audiences = card.dataset.audiences || '';
+                    if (audiences.includes(filter)) {
+                        card.classList.remove('filtered-out');
+                    } else {
+                        card.classList.add('filtered-out');
+                    }
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
